@@ -21,6 +21,10 @@ def crp():
         predict_vector = rqa(training_well_ts, testing_well_ts, dim, tau, epsilon, lambd, percent, curve_number, facies_class_number)
     except Exception:
     	return jsonify(error=[0])
+    # training_well_ts, testing_well_ts, dim, tau, epsilon, lambd, percent, curve_number, facies_class_number = get_data_from_json(data)
+
+
+    # predict_vector = rqa(training_well_ts, testing_well_ts, dim, tau, epsilon, lambd, percent, curve_number, facies_class_number)
 
     # training_well_ts, testing_well_ts, dim, tau, epsilon, lambd, percent, curve_number, facies_class_number = get_data_from_json(data)
     # predict_vector = rqa(training_well_ts, testing_well_ts, dim, tau, epsilon, lambd, percent, curve_number, facies_class_number)

@@ -52,8 +52,8 @@ def filter(data_well, label_well, label, dim ,tau):
 		else:
 			e = index[i+1]
 
-
-
+	if((e + 1 - b) > ((dim-1)*tau)):
+		vector_data_well_label.append(data_well[b:e+1, 1:])
 	# print('vector_data_well_label.shape: ', vector_data_well_label[0].shape)
 
 	# # compute length of each sub timeseries
@@ -94,11 +94,12 @@ def extract_vector_train_each_well(X, y, dim, tau, label, train_well):
 
 
 
-	label_well = y[np.where(X[:, 0] == train_well)[0]]
-
+	label_well = y[np.where(X[:, 0].astype(int) == train_well)[0]]
+	# print(label_well)
 	vector_data_well_label = filter(data_well, label_well, label, dim, tau)
 
-
+	if len(vector_data_well_label) == 0:
+		raise Exception('Error vector_data_well_label')
 	"""______vector train for first vector_____"""
 	vectors_train = get_vector_each_vector_timeseries(vector_data_well_label[0], dim, tau)
 	"""______vector train for another vector_____"""

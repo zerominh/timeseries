@@ -270,17 +270,17 @@ def convert_data_train_dict_to_array(train_data):
 	label_enc = LabelEncoder()
 	name_well = label_enc.fit_transform(np.array(well)).reshape(-1, 1)
 
-	new_data = np.concatenate((name_well, new_data, np.array(facies).reshape(-1, 1)), axis = 1)
+	new_data = np.concatenate((name_well, np.array(data).T, np.array(facies).reshape(-1, 1)), axis = 1)
 
 	return new_data
 
 def convert_data_test_dict_to_array(test_data):
-	well = train_data['well']
-	data = train_data['data']
+	well = test_data['well']
+	data = test_data['data']
 	label_enc = LabelEncoder()
 	name_well = label_enc.fit_transform(np.array(well)).reshape(-1, 1)
 
-	new_data = np.concatenate((name_well, new_data), axis = 1)
+	new_data = np.concatenate((name_well, np.array(data).T), axis = 1)
 
 	return new_data
 
@@ -297,7 +297,7 @@ def get_data_from_json(data_json):
 
 
 
-	training_well_ts = convert_data_train_to_array(train_data)
+	training_well_ts = convert_data_train_dict_to_array(train_data)
 
 
 
@@ -325,16 +325,16 @@ def get_data_from_json(data_json):
 
 	return training_well_ts, testing_well_ts, dim, tau, epsilon, lambd, percent, curve_number, facies_class_number
 
-def main():
-	dim = 4
-	tau = 2
-	epsilon = 0.1
-	lambd = 20
-	percent = 1
-	training_well_ts, testing_well_ts = get_data()
+# def main():
+# 	dim = 4
+# 	tau = 2
+# 	epsilon = 0.1
+# 	lambd = 20
+# 	percent = 1
+# 	training_well_ts, testing_well_ts = get_data()
 
-	predict_vector = rqa(training_well_ts, testing_well_ts, dim=dim, tau=tau, epsilon=epsilon, lambd=lambd, percent=percent, curve_number=1, facies_class_number=5)
+# 	predict_vector = rqa(training_well_ts, testing_well_ts, dim=dim, tau=tau, epsilon=epsilon, lambd=lambd, percent=percent, curve_number=1, facies_class_number=5)
 
-if __name__ == '__main__':
-	main()
+# if __name__ == '__main__':
+# 	main()
 

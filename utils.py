@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from scipy.spatial.distance import cdist
 from sklearn.metrics import classification_report
 from collections import Counter
-
+from sklearn.preprocessing import LabelEncoder
 
 def create_table_index(dim , tau, m):
 	"""
@@ -172,7 +172,7 @@ def create_test(testing_well_ts, dim, tau, curve_number):
 	# testing_well_ts[:,0] = label_enc.fit_transform(testing_well_ts[:, 0])
 
 	X = testing_well_ts[:, [0, curve_number]]
-	y = testing_well_ts[:, -1].astype(int)
+	# y = testing_well_ts[:, -1].astype(int)
 
 	return extract_vector_test(X, dim, tau)
 
@@ -189,17 +189,21 @@ def rqa(training_well_ts, testing_well_ts, dim, tau, epsilon, lambd, percent, cu
 	
 	@Parameters:
 	training_well_ts -- numpy array 2D:
-		the 1st column of type string (name of well)
+		the 1st column of type positive integer (name of well be encoded to number)
 		the last column of type integer: facies_class
 		the another column: features
 
 		Example:
-		array([['RD-1P'		2555.4432	2434.7698	108.8463	0.2312	2.5599	84.4916	0.6982	0.036	5],
-				['RD-1P'	2555.5956	2434.9184	101.5264	0.2011	2.586	81.334	0.617	0.0333	5],
-				['RD-1P'	2557.7292	2436.9983	74.2481		0.1072	2.5488	68.2637	0.3139	0		3]])
+		array([[0   2555.4432	2434.7698	108.8463	0.2312	2.5599	84.4916	0.6982	0.036	5],
+			   [0	2555.5956	2434.9184	101.5264	0.2011	2.586	81.334	0.617	0.0333	5],
+			   [1	2557.7292	2436.9983	74.2481		0.1072	2.5488	68.2637	0.3139	0		3]])
 
 
-	testing_well_ts -- numpy array 2d like training_well_ts but containing only data of one well
+	testing_well_ts -- numpy array 2d like training_well_ts but containing only data of one well and not have facies
+	    Example:
+	    array([[0   2555.4432	2434.7698	108.8463	0.2312	2.5599	84.4916	0.6982	0.036    ],
+			   [0	2555.5956	2434.9184	101.5264	0.2011	2.586	81.334	0.617	0.0333   ],
+			   [1	2557.7292	2436.9983	74.2481		0.1072	2.5488	68.2637	0.3139	0		  ]])
 	
 	dim : the dimension -- type: integer, greater than or equal to 2
 	tau : the step -- type: integer, greater than or equal to 1
@@ -257,74 +261,67 @@ def rqa(training_well_ts, testing_well_ts, dim, tau, epsilon, lambd, percent, cu
 
 # 	# return X
 
-def convert_list_to_nparray(data):
-
-	data = np.array(data)
-
-	new_data = np.array(data[:, 1:], dtype=np.float32)
+def convert_data_train_dict_to_array(train_data):
 
 
-	from sklearn.preprocessing import LabelEncoder
+	well = train_data['well']
+	facies = train_data['facies']
+	data = train_data['data']
 	label_enc = LabelEncoder()
-	name_well = label_enc.fit_transform(data[:, 0].reshape(-1, 1)).reshape(-1, 1)
+	name_well = label_enc.fit_transform(np.array(well)).reshape(-1, 1)
+
+	new_data = np.concatenate((name_well, new_data, np.array(facies).reshape(-1, 1)), axis = 1)
+
+	return new_data
+
+def convert_data_test_dict_to_array(test_data):
+	well = train_data['well']
+	data = train_data['data']
+	label_enc = LabelEncoder()
+	name_well = label_enc.fit_transform(np.array(well)).reshape(-1, 1)
 
 	new_data = np.concatenate((name_well, new_data), axis = 1)
 
 	return new_data
 
 
-
 def get_data_from_json(data_json):
 
-	data = data_json['data']	
-	if data == None:
-		raise AssertionError
+	data = data_json['data']
+
+	train_data = data['train']
+
+	test_data = data['test']
+
 	params = data_json['params']
-	if params == None:
-		raise AssertionError
 
-	training_well_ts_list = data['train']
-	if training_well_ts_list == None:
-		raise AssertionError
 
-	training_well_ts = convert_list_to_nparray(training_well_ts_list)
-	
-	# print(type(training_well_ts[0, -1]))
 
-	testing_well_ts_list = data['test']
+	training_well_ts = convert_data_train_to_array(train_data)
 
-	if testing_well_ts_list == None:
-		raise AssertionError
 
-	testing_well_ts = convert_list_to_nparray(testing_well_ts_list)
+
+	testing_well_ts = convert_data_test_dict_to_array(test_data)
 
 	dim = params['dim']
-	if dim == None:
-		raise AssertionError
+
 
 	tau = params['tau']
-	if tau == None:
-		raise AssertionError
+
 
 	epsilon = params['epsilon']
-	if epsilon == None:
-		raise AssertionError
+
 
 	lambd = params['lambd']
-	if lambd == None:
-		raise AssertionError
+
 
 	percent = params['percent']
-	if percent == None:
-		raise AssertionError
+
 
 	curve_number = params['curve_number']
-	if curve_number == None:
-		raise AssertionError
+
 
 	facies_class_number = params['facies_class_number']
-	if facies_class_number == None:
-		raise AssertionError
 
 	return training_well_ts, testing_well_ts, dim, tau, epsilon, lambd, percent, curve_number, facies_class_number
 
@@ -335,8 +332,7 @@ def main():
 	lambd = 20
 	percent = 1
 	training_well_ts, testing_well_ts = get_data()
-	# print(training_well_ts)
-	# print(testing_well_ts)
+
 	predict_vector = rqa(training_well_ts, testing_well_ts, dim=dim, tau=tau, epsilon=epsilon, lambd=lambd, percent=percent, curve_number=1, facies_class_number=5)
 
 if __name__ == '__main__':
